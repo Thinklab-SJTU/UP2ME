@@ -51,6 +51,7 @@ class UP2ME_forecaster(nn.Module):
         self.position_embedding.load_state_dict(self.pretrained_model.position_embedding.state_dict())
         self.channel_embedding.load_state_dict(self.pretrained_model.channel_embedding.state_dict())
         self.learnable_patch.data.copy_(self.pretrained_model.learnable_patch.data)
+        
         self.enc_2_dec.load_state_dict(self.pretrained_model.enc_2_dec.state_dict())   
 
     

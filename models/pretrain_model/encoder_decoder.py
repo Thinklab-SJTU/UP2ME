@@ -21,6 +21,15 @@ class encoder(nn.Module):
         encoded_patch = self.encoder_layers(patch, src_key_padding_mask = mask)
 
         return encoded_patch
+    
+    def forward_multi(self, patch):
+        batch_size, ts_d, patch_num, _ = patch.shape
+
+        patch_mergeD = rearrange(patch, 'b ts_d patch_num d_model -> (b ts_d) patch_num d_model')
+        encoded_patch_mergeD = self.encoder_layers(patch_mergeD)
+        encoded_patch = rearrange(encoded_patch_mergeD, '(b ts_d) patch_num d_model -> b ts_d patch_num d_model', b = batch_size)
+
+        return encoded_patch
 
 class decoder(nn.Module):
     def __init__(self, patch_size, n_layers=1, d_model=256, n_heads=4,  d_ff=512, dropout=0.):
@@ -44,5 +53,16 @@ class decoder(nn.Module):
         decoded_patch = self.decoder_layers(patch)
         decoded_ts = self.output_layer(decoded_patch)
         decoded_ts = rearrange(decoded_ts, 'b patch_num patch_size -> b (patch_num patch_size)')
+
+        return decoded_ts
+    
+    def forward_multi(self, patch):
+        batch_size, ts_d, patch_num, _ = patch.shape
+
+        patch_mergeD = rearrange(patch, 'b ts_d patch_num d_model -> (b ts_d) patch_num d_model')
+        decoded_patch_mergeD = self.decoder_layers(patch_mergeD)
+        decoded_patch = rearrange(decoded_patch_mergeD, '(b ts_d) patch_num d_model -> b ts_d patch_num d_model', b = batch_size)
+        decoded_ts = self.output_layer(decoded_patch)
+        decoded_ts = rearrange(decoded_ts, 'b ts_d patch_num patch_size -> b ts_d (patch_num patch_size)')
 
         return decoded_ts

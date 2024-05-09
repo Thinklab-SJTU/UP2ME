@@ -15,8 +15,7 @@ from torch.nn import DataParallel
 import json
 import pickle
 
-from utils.tools import EarlyStopping, adjust_learning_rate
-from utils.metrics import segment_adjust, adjusted_precision_recall_curve
+from utils.tools import EarlyStopping, adjust_learning_rate, segment_adjust, adjusted_precision_recall_curve
 
 class UP2ME_exp_detect(object):
     def __init__(self, args):
@@ -104,6 +103,7 @@ class UP2ME_exp_detect(object):
     def train(self, setting):
         train_data, train_loader = self._get_data(flag = 'train')
         vali_data, vali_loader = self._get_data(flag = 'val')
+        test_data, test_loader = self._get_data(flag = 'test')
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -150,9 +150,10 @@ class UP2ME_exp_detect(object):
             print("Epoch: {} cost time: {}".format(epoch+1, time.time()-epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
+            test_loss = self.vali(test_data, test_loader, criterion)
 
-            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}".format(
-                epoch + 1, train_steps, train_loss, vali_loss))
+            print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
+                epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             early_stopping(vali_loss, self.model, path)
             adjust_learning_rate(model_optim, epoch + 1, self.args)
             if early_stopping.early_stop:

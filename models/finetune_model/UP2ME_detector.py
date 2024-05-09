@@ -27,6 +27,7 @@ class UP2ME_Detector(nn.Module):
         
         # if fine-tune, add new layers
         if self.finetune_flag:
+            self.enc_2_dec = nn.Linear(pretrain_args['d_model'], pretrain_args['d_model'])
             self.learnable_patch = nn.Parameter(torch.randn(pretrain_args['d_model']))
             self.position_embedding = learnable_position_embedding(pretrain_args['d_model'])
             self.channel_embedding = nn.Embedding(pretrain_args['data_dim'], pretrain_args['d_model'])
@@ -50,6 +51,8 @@ class UP2ME_Detector(nn.Module):
         self.position_embedding.load_state_dict(self.pretrained_model.position_embedding.state_dict())
         self.channel_embedding.load_state_dict(self.pretrained_model.channel_embedding.state_dict())
         self.learnable_patch.data.copy_(self.pretrained_model.learnable_patch.data)
+        
+        self.enc_2_dec.load_state_dict(self.pretrained_model.enc_2_dec.state_dict())   
 
     
     def train_mode(self):
@@ -117,7 +120,8 @@ class UP2ME_Detector(nn.Module):
             masked_patch_idx = i * torch.ones([batch_size, ts_d, 1], dtype=torch.long).to(input_ts.device)
             unmasked_patch_idx = torch.cat([patch_idx[:, :, :i], patch_idx[:, :, i + 1:]], dim=-1)
             encoded_patch_unmasked = self.pretrained_model.encode_multi_to_patch(input_ts, masked_patch_idx, unmasked_patch_idx)
-            patches_full = torch.cat([encoded_patch_unmasked[:, :, :i, :], masked_patches_embed[:, :, i:i+1, :], encoded_patch_unmasked[:, :, i:, :]], dim = -2) #[batch_size, ts_d, patch_num, d_model]
+            encoded_patch_unmasked_transformed = self.enc_2_dec(encoded_patch_unmasked)
+            patches_full = torch.cat([encoded_patch_unmasked_transformed[:, :, :i, :], masked_patches_embed[:, :, i:i+1, :], encoded_patch_unmasked_transformed[:, :, i:, :]], dim = -2) #[batch_size, ts_d, patch_num, d_model]
 
             #passing TC layers
             for layer in self.temporal_channel_layers:
