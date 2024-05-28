@@ -4,4 +4,3 @@ detect_result/
 forecast_results/
 *.pyc
 datasets/
-pretrain-library/
