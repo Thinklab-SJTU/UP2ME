@@ -1,6 +1,6 @@
 # UP2ME: <u>U</u>nivariate <u>P</u>re-training to <u>M</u>ultivariate Fin<u>e</u>-tuning as a General-purpose Framework for Multivariate Time Series Analysis (ICML 2024)
 
-This is the origin Pytorch implementation of “UP2ME: Univariate Pre-training to Multivariate Fine-tuning as a General-purpose Framework for Multivariate Time Series Analysis （ICML L2024)”
+This is the origin Pytorch implementation of “[UP2ME: Univariate Pre-training to Multivariate Fine-tuning as a General-purpose Framework for Multivariate Time Series Analysis (ICML 2024)](https://openreview.net/pdf?id=aR3uxWlZhX)”
 
 ## Workflow
 UP2ME is a general-purpose framework for Multivariate Time Series Analysis. It conducts taskagnostic pre-training when downstream tasks are unspecified. Once the task and setting (e.g. forecasting length) are determined, it gives sensible solutions with frozen pre-trained parameters. Further accuracy is achieved through multivariate fine-tuning.
@@ -50,15 +50,17 @@ Graph Transformer layer. The Graph Transformer layer takes the constructed depen
 
 2. Download the datasets from [UP2ME-datasets](https://drive.google.com/file/d/1oLYcQa7NJcMDSP_rYSkP5hQHzXL2rpZM/view?usp=drive_link) and unzip it into the folder `datasets` in the root folder. The struture should be like:
 
-    - datasets
-      - ETT
-        - ETTm1.csv
-      - ...... same for csv format datasets: weather, ECL(Electricity) and traffic
-      - SMD
-        - SMD_train.npy
-        - SMD_test.npy
-        - SMD_test_label.npy
-      - ...... same for npy format datasets: PSM, SWaT and NIPS_Water(GECCO)
+    ```
+    datasets
+    ├── ETT
+    │   └── ETTm1.csv
+    ├── same for csv format datasets: weather, ECL(Electricity) and traffic
+    ├── SMD
+    │   ├── SMD_train.npy
+    │   ├── SMD_test.npy
+    │   └── SMD_test_label.npy
+    └── same for npy format datasets: PSM, SWaT and NIPS_Water(GECCO)
+    ```
 
 
 
@@ -66,9 +68,20 @@ Graph Transformer layer. The Graph Transformer layer takes the constructed depen
     ```
     bash scripts/forecast_scripts/ETTm1.sh
     ```
-    the immediate reaction(UP2ME(IR)) and fine-tuning(UP2ME(FT)) modes  will be tested on 4 different forecasting lengths (96, 192, 336, 720) and results will be saved in a new folder `./forecast_result`.
+    the immediate reaction(UP2ME(IR)) and fine-tuning(UP2ME(FT)) modes  will be tested on 4 different forecasting lengths (96, 192, 336, 720) and results will be saved in a new folder `./forecast_results`.
 
 4. To reproduce results for all 3 tasks on all 8 datasets, run other scripts in `./scripts`.  
+
+## Citation
+If you find this repository useful in your research, please cite:
+```
+@inproceedings{zhang2024upme,
+title={{UP}2{ME}:  Univariate Pre-training to Multivariate Fine-tuning as a General-purpose Framework for Multivariate Time Series Analysis},
+author={Yunhao Zhang and Minghao Liu and Shengyang Zhou and Junchi Yan},
+booktitle={International Conference on Machine Learning (ICML)},
+year={2024}
+}
+```
 
 ## Acknowledgement
 We appreciate the following works for their valuable code and data:
