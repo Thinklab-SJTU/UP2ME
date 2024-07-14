@@ -217,3 +217,71 @@ class UP2ME_model(nn.Module):
 
         return reconstructed_ts
     
+    # imputation-related functions
+    def decode_CDpatch_to_multi(self, pacthes_with_CD):
+        '''
+        input the patches with cross-channel dependency (in finetune), and output the reconstructed full time series
+        patches_with_CD: [batch_size, ts_d, patch_num, d_model]
+        '''
+        batch_size, ts_d, patch_num, _ = pacthes_with_CD.shape
+        decode_ts = self.decoder.forward_multi(pacthes_with_CD)  # [batch_size, ts_d, ts_len]
+        channel_idx_flatten = torch.arange(self.data_dim)[None, :].expand(batch_size, -1).reshape(batch_size * ts_d).to(decode_ts.device)
+        decode_ts_flatten = rearrange(decode_ts, 'batch_size ts_d ts_len -> (batch_size ts_d) ts_len')
+        decode_ts_flatten = self.RevIN(decode_ts_flatten, channel_idx_flatten, mode='denorm')
+        decode_ts = rearrange(decode_ts_flatten, '(batch_size ts_d) ts_len -> batch_size ts_d ts_len', batch_size=batch_size)
+
+        return decode_ts
+
+    def encode_masked_ts(self, ts, mask, channel_idx):
+        '''
+        Encode the unmasked patches of unvariate varational time series to latent patches.
+
+        Args:
+            ts: flattened time series with shape [batch_size, ts_length]
+            mask: times series with missing data's mask [batch_size, ts_length]
+            channel_idx: channel index of time series with shape [batch_size]
+        '''
+        batch_size, ts_d, ts_len = ts.shape
+        ts = ts.reshape(-1, ts_len)
+        mask = mask.reshape(-1, ts_len)
+
+        channel_idx = channel_idx.reshape(-1)
+        ts = self.RevIN(ts, channel_idx, 'norm', mask)
+
+        patch_embed = self.patch_embedding.forward_uni(ts)  # [batch_size, patch_num, d_model]
+        position_embed = self.position_embedding(patch_embed.shape)
+
+        # channel_idx = channel_idx.reshape(batch_size, ts_d)
+        channel_embed = self.channel_embedding(channel_idx)  # [batch_size, d_model]
+
+        patches = patch_embed + position_embed + channel_embed[:, None, :]  # [batch_size, patch_num, d_model]
+
+        patch_mask = rearrange(mask, 'batch_size (patch_num patch_size) -> batch_size patch_num patch_size', patch_size=self.patch_size)
+        patch_mask = patch_mask.sum(dim=-1) > 0  # [batch_size, patch_num]
+
+        unmasked_pacthes_encoded = self.encoder.forward_uni(patches, patch_mask)  # [batch_size, padded_unmasked_patch_num, d_model]
+        return unmasked_pacthes_encoded, patch_mask
+
+    def decode_masked_ts(self, unmasked_patches_encoded, channel_idx, patch_mask, temporal_geometric_layer=None):
+        '''
+        Decoder for variational multivariate series: [batch_size, padded_unmasked_patch_num, d_model] 
+        '''
+        batch_size, patch_num, _ = unmasked_patches_encoded.shape
+        unmasked_patches_encoded = self.enc_2_dec(unmasked_patches_encoded)
+
+        patch_embed_masked = self.learnable_patch[None, None, :].expand(batch_size, patch_num, -1)  # [batch_size, patch_num, d_model]
+        position_embed_masked = self.position_embedding(patch_embed_masked.shape)  # [batch_size, patch_num, d_model]
+        channel_embed_masked = self.channel_embedding(channel_idx)
+        patches_masked = patch_embed_masked + position_embed_masked + channel_embed_masked[:, None, :]
+
+        full_patches = patches_masked * patch_mask[:, :, None] + unmasked_patches_encoded * (~patch_mask[:, :, None])  # [batch_size, patch_num, d_model]
+
+        if temporal_geometric_layer is not None:
+            full_patches = temporal_geometric_layer(full_patches)
+
+        reconstructed_ts = self.decoder.forward_uni(full_patches)
+
+        reconstructed_ts = self.RevIN(reconstructed_ts, channel_idx, mode='denorm')
+        reconstructed_ts = reconstructed_ts.reshape(batch_size // self.data_dim, self.data_dim, -1)
+        return reconstructed_ts
+
