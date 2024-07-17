@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 data_split='0.7,0.1,0.2'
 random_seed=2023
-gpu=3
+gpu=1
 test_random_seed=4069
 model="U2M_finetune"
 script_name="run_imputation.py"
@@ -25,8 +25,8 @@ for model in $model; do
           --batch_size 128 \
           --slide_step $in_len \
           --itr 1 \
-          --train_epochs 1 \
-          --learning_rate 5e-4 \
+          --train_epochs 30 \
+          --learning_rate 1e-4 \
           --min_mask_ratio $min_mask_ratio \
           --max_mask_ratio $(echo "$min_mask_ratio + 0.125" | bc) \
           --gpu $gpu \

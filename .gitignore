@@ -3,9 +3,11 @@ forecast_checkpoints/
 detect_result/
 forecast_results/
 *.pyc
-datasets/
+datasets
 logs/
+checkpoints_forecast/
 results/
+data/imputation/mask_generator
 
 # .vscode folder
 .vscode/

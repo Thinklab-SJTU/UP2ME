@@ -90,7 +90,7 @@ class U2M_imputation(nn.Module):
         # compute the graph structure
         unmasked_patches_encoded = rearrange(unmasked_patches_encoded, '(batch_size ts_d) patch_num patch_size -> batch_size ts_d patch_num patch_size', ts_d=ts_d)  # [batch_size, ts_d, patch_num, d_model]
         patch_mask = rearrange(patch_mask, '(batch_size ts_d) patch_num -> batch_size ts_d patch_num', ts_d=ts_d)  # [batch_size, ts_d, patch_num, d_model]
-        knn_adj, top_k_adj, graph_adj = graph_construct(unmasked_patches_encoded, patch_mask=patch_mask, k=neighbor_num)  # [batch_size, ts_d, patch_num, d_model]
+        graph_adj = graph_construct(unmasked_patches_encoded, patch_mask=patch_mask, k=neighbor_num)  # [batch_size, ts_d, patch_num, d_model]
 
         unmasked_patches_encoded = self.enc_2_dec(unmasked_patches_encoded)
 

@@ -6,6 +6,7 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset
 from sklearn.preprocessing import StandardScaler
+from models.imputation_model.mask_generator import generate_mask
 
 
 #Forecasting dataset for data saved in csv format
@@ -277,7 +278,9 @@ class Dataset_Multi_imputation(Dataset):
                 # shutil.rmtree(self.mask_save_path)
                 pass
 
-            os.makedirs(self.mask_save_path, exist_ok=True)
+            # ! create the mask save path if doesn't exist, note that the mask_save_path can be a symbolic link.
+            if not os.path.islink(self.mask_save_path):
+                os.makedirs(self.mask_save_path, exist_ok=True)
 
             self.min_mask_ratio = kwargs.get("min_mask_ratio", -1.0)
             self.max_mask_ratio = kwargs.get("max_mask_ratio", -1.0)
@@ -425,7 +428,9 @@ class Dataset_Imputation_npy(Dataset):
                 # shutil.rmtree(self.mask_save_path)
                 pass
 
-            os.makedirs(self.mask_save_path, exist_ok=True)
+            # ! create the mask save path if doesn't exist, note that the mask_save_path can be a symbolic link.
+            if not os.path.islink(self.mask_save_path):
+                os.makedirs(self.mask_save_path, exist_ok=True)
 
             self.min_mask_ratio = kwargs.get("min_mask_ratio", -1.0)
             self.max_mask_ratio = kwargs.get("max_mask_ratio", -1.0)

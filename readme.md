@@ -71,6 +71,11 @@ Graph Transformer layer. The Graph Transformer layer takes the constructed depen
     the immediate reaction(UP2ME(IR)) and fine-tuning(UP2ME(FT)) modes  will be tested on 4 different forecasting lengths (96, 192, 336, 720) and results will be saved in a new folder `./forecast_results`.
 
 4. To reproduce results for all 3 tasks on all 8 datasets, run other scripts in `./scripts`.  
+5. Note that for imputation tasks, we have generated specific test masks for reproducibility, download test mask from [TODO], rename it to *mask generator*. And link it to the following path:
+```
+ln -sf <your download path of test mask> $PWD/data/imputation/
+```
+If you wanna specify the path for test masks, please pass in the `--mask_save_path` handler when running imputation scripts.
 
 ## Citation
 If you find this repository useful in your research, please cite:

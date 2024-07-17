@@ -27,7 +27,7 @@ for model in $model; do
           --itr 1 \
           --is_training \
           --train_epochs 20 \
-          --learning_rate 0.0001 \
+          --learning_rate 5e-4 \
           --batch_size 128 \
           --gpu $gpu \
           --min_mask_ratio $min_mask_ratio \
